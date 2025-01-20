@@ -1,0 +1,26 @@
+{
+  "name": "any-icon",
+  "version": "1.0.0",
+  "description": "Agnostic button",
+  "main": "index.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/mesquitaigor/any-button.git"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "bugs": {
+    "url": "https://github.com/mesquitaigor/any-button/issues"
+  },
+  "homepage": "https://github.com/mesquitaigor/any-button#readme",
+  "devDependencies": {
+    "typescript": "^5.7.3"
+  },
+  "dependencies": {
+    "tslib": "^2.8.1"
+  }
+}
