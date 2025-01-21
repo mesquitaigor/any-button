@@ -2,12 +2,24 @@
   "compilerOptions": {
     "target": "es2017",
     "module": "ESNext",
+    "strict": true,
     "moduleResolution": "Node",
     "declaration": true,
     "outDir": "./dist",
     "rootDir": "./src",
-    "strict": true,
     "esModuleInterop": true,
-    "skipLibCheck": true
-  }
+    "skipLibCheck": true,
+    "noImplicitAny": true,
+    "strictNullChecks": true,
+    "noImplicitReturns": true,
+    "allowUnreachableCode": false,
+    "allowUnusedLabels": false,
+    "alwaysStrict": true,
+    "noFallthroughCasesInSwitch": true,
+    "noImplicitOverride": true,
+    "noImplicitThis": true
+  },
+  "include": [
+    "src/**/*.ts"
+  ]
 }

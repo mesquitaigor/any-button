@@ -1,11 +1,10 @@
-class AnyIcon extends HTMLElement {
+// src/index.ts
+var AnyIcon = class extends HTMLElement {
   constructor() {
     super();
     const shadow = this.attachShadow({ mode: "open" });
-
     const span = document.createElement("span");
-    span.textContent = `Ícone: ${this.getAttribute("atributo")}`;
-
+    span.textContent = `\xCDcone: ${this.getAttribute("atributo")}`;
     const style = document.createElement("style");
     style.textContent = `
       span {
@@ -14,24 +13,18 @@ class AnyIcon extends HTMLElement {
         font-family: Arial, sans-serif;
       }
     `;
-
     shadow.appendChild(style);
     shadow.appendChild(span);
   }
-}
-
+};
 customElements.define("any-icon", AnyIcon);
-
-
-class Icon{
-  constructor(private path: string){}
-  public getPath(): string{
-    return this.path;
+var RegisterIcons = class {
+  constructor() {
+    this.icons = [];
   }
-}
-class RegisterIcons{
-  private icons: Icon[] = [];
-}
-
-export {AnyIcon, RegisterIcons}
-
+};
+export {
+  AnyIcon,
+  RegisterIcons
+};
+//# sourceMappingURL=index.mjs.map
