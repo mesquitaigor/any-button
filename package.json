@@ -1,12 +1,12 @@
 {
   "name": "any-icon",
   "types": "./dist/index.d.ts",
-  "version": "1.0.2",
+  "version": "1.0.48",
   "description": "Agnostic button",
   "main": "./dist/index.js",
   "module": "./dist/index.mjs",
   "scripts": {
-    "build": "tsup"
+    "serve": "tsup --watch"
   },
   "repository": {
     "type": "git",
@@ -20,11 +20,14 @@
   },
   "homepage": "https://github.com/mesquitaigor/any-button#readme",
   "devDependencies": {
+    "@eslint/js": "^9.18.0",
     "@typescript-eslint/eslint-plugin": "^8.21.0",
     "@typescript-eslint/parser": "^8.21.0",
     "eslint": "^9.18.0",
+    "globals": "^15.14.0",
     "tsup": "^8.3.5",
-    "typescript": "^5.7.3"
+    "typescript": "^5.7.3",
+    "typescript-eslint": "^8.21.0"
   },
   "exports": {
     ".": "./dist/index.js"

@@ -1,37 +1,34 @@
-class AnyIcon extends HTMLElement {
-  constructor() {
-    super();
-    const shadow = this.attachShadow({ mode: "open" });
+import { IconSizes } from './any-icons.type';
+import AnyIcon from './models/AnyIcon';
+import AnyIconsManager from './models/AnyIconsManager';
+import IconModel from './models/IconModel';
 
-    const span = document.createElement("span");
-    span.textContent = `Ícone: ${this.getAttribute("atributo")}`;
+async function loadCssFile(url: string): Promise<string | void> {
+  try {
+    const response = await fetch(url);
+    if (!response.ok) {
+      throw new Error("Falha ao carregar o arquivo CSS");
+    }
 
-    const style = document.createElement("style");
-    style.textContent = `
-      span {
-        font-size: 20px;
-        color: #007bff;
-        font-family: Arial, sans-serif;
-      }
-    `;
+    const cssText = await response.text();
+    console.log(cssText);
 
-    shadow.appendChild(style);
-    shadow.appendChild(span);
+    return cssText;
+  } catch (error) {
+    console.error(error);
   }
 }
 
-customElements.define("any-icon", AnyIcon);
+loadCssFile('./style.css').then(cssContent => {
+  console.log(cssContent)
+});
 
-
-class Icon{
-  constructor(private path: string){}
-  public getPath(): string{
-    return this.path;
-  }
-}
-class RegisterIcons{
-  private icons: Icon[] = [];
+const createManager = <Names>(): AnyIconsManager<Names> => {
+  const instance = AnyIconsManager.build<Names>();
+  AnyIcon.defineManager<Names>(instance)
+  return instance
 }
 
-export {AnyIcon, RegisterIcons}
+customElements.define(AnyIcon.elementName, AnyIcon);
+export {AnyIconsManager, AnyIcon, createManager, IconModel, IconSizes}
 

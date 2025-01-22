@@ -1,0 +1,9 @@
+:host {
+  display: flex;
+  width: min-content;
+}
+
+:host img.any-icon-img {
+  user-select: none;
+  pointer-events: none;
+}
