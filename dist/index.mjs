@@ -1,16 +1,35 @@
 // src/any-icons.type.ts
-var IconSizes = /* @__PURE__ */ ((IconSizes3) => {
-  IconSizes3[IconSizes3["NANO"] = 0] = "NANO";
-  IconSizes3[IconSizes3["MICRO"] = 1] = "MICRO";
-  IconSizes3[IconSizes3["TINY"] = 2] = "TINY";
-  IconSizes3[IconSizes3["SMALL"] = 3] = "SMALL";
-  IconSizes3[IconSizes3["MEDIUM"] = 4] = "MEDIUM";
-  IconSizes3[IconSizes3["LARGE"] = 5] = "LARGE";
-  IconSizes3[IconSizes3["HUGE"] = 6] = "HUGE";
-  IconSizes3[IconSizes3["EXTRA_HUGE"] = 7] = "EXTRA_HUGE";
-  IconSizes3[IconSizes3["GIANT"] = 8] = "GIANT";
-  return IconSizes3;
+var IconSizes = /* @__PURE__ */ ((IconSizes4) => {
+  IconSizes4[IconSizes4["NANO"] = 0] = "NANO";
+  IconSizes4[IconSizes4["MICRO"] = 1] = "MICRO";
+  IconSizes4[IconSizes4["TINY"] = 2] = "TINY";
+  IconSizes4[IconSizes4["SMALL"] = 3] = "SMALL";
+  IconSizes4[IconSizes4["MEDIUM"] = 4] = "MEDIUM";
+  IconSizes4[IconSizes4["LARGE"] = 5] = "LARGE";
+  IconSizes4[IconSizes4["HUGE"] = 6] = "HUGE";
+  IconSizes4[IconSizes4["EXTRA_HUGE"] = 7] = "EXTRA_HUGE";
+  IconSizes4[IconSizes4["GIANT"] = 8] = "GIANT";
+  return IconSizes4;
 })(IconSizes || {});
+var IconColors = /* @__PURE__ */ ((IconColors3) => {
+  IconColors3[IconColors3["PRIMARY"] = 0] = "PRIMARY";
+  IconColors3[IconColors3["SECUNDARY"] = 1] = "SECUNDARY";
+  IconColors3[IconColors3["TERTIARY"] = 2] = "TERTIARY";
+  IconColors3[IconColors3["DANGER"] = 3] = "DANGER";
+  IconColors3[IconColors3["WARNING"] = 4] = "WARNING";
+  IconColors3[IconColors3["SUCCESS"] = 5] = "SUCCESS";
+  IconColors3[IconColors3["BLACK"] = 6] = "BLACK";
+  return IconColors3;
+})(IconColors || {});
+var ColorsPropName = {
+  [0 /* PRIMARY */]: "primary",
+  [1 /* SECUNDARY */]: "secundary",
+  [2 /* TERTIARY */]: "tertiary",
+  [3 /* DANGER */]: "danger",
+  [4 /* WARNING */]: "warning",
+  [5 /* SUCCESS */]: "success",
+  [6 /* BLACK */]: "black"
+};
 var SizeNames = {
   [0 /* NANO */]: "nano",
   [1 /* MICRO */]: "micro",
@@ -23,29 +42,98 @@ var SizeNames = {
   [8 /* GIANT */]: "giant"
 };
 
+// src/models/AnyIconRenderer.ts
+import { html, render } from "lit-html";
+var AnyIconRenderer = class {
+  constructor(shadow) {
+    this.shadow = shadow;
+    this.className = "any-icon-img";
+  }
+  render(element) {
+    const icon = element.getIcon();
+    if (icon) {
+      this.template = html`
+        <style>
+          :host {
+            display: flex;
+            width: min-content;
+          }
+          :host img.${this.className}{
+            user-select: none;
+            pointer-events: none;
+            background-color: ${icon.getColor()};
+            -webkit-mask: url(${icon.getPatch()}) no-repeat center;
+            mask: url(${icon.getPatch()}) no-repeat center;
+            mark-size: cover;
+            object-fit: contain;
+          }
+        </style>
+        <img 
+          class="${this.className}"
+          width="${icon.width}" 
+          height="auto" 
+          loading="${icon.getLoadingType()}"
+          id="${icon.randomId}" 
+          src="${icon.getPatch() || ""}" 
+          alt="${element.getAttribute("alt") || ""}"
+        >
+      `;
+      this.update();
+    }
+  }
+  update() {
+    render(this.template, this.shadow);
+  }
+};
+
 // src/models/AnyIcon.ts
 var _AnyIcon = class _AnyIcon extends HTMLElement {
   constructor() {
     var _a;
     super();
     this.managerDefineEventCallback = () => {
-      if (!this.image || this.image && !this.image.getAttribute("src")) {
-        const image = this.createImage();
-        if (image) {
-          this.image = image;
-        }
-        this.appendImage();
-        this.connectedCallback();
-      }
+      this.render();
     };
-    this.shadow = this.attachShadow({ mode: "open" });
-    const image = this.createImage();
-    if (image) {
-      this.image = image;
-    }
-    this.appendImage();
-    this.appendStyle();
+    this.anyIconRenderer = new AnyIconRenderer(this.attachShadow({ mode: "open" }));
+    this.render();
     (_a = _AnyIcon.__manager_define_events__) == null ? void 0 : _a.push(this.managerDefineEventCallback);
+  }
+  render() {
+    var _a;
+    this.defineIcon();
+    if (this.icon) {
+      (_a = this.anyIconRenderer) == null ? void 0 : _a.render(this);
+      this.defineLoadingByProp();
+      this.defineAltByProp();
+      this.defineSizeByProp();
+      this.defineColor();
+    }
+  }
+  getIcon() {
+    return this.icon;
+  }
+  connectedCallback() {
+    this.defineLoadingByProp();
+    this.defineAltByProp();
+    this.defineSizeByProp();
+    this.defineColor();
+  }
+  defineColor() {
+    if (this.icon) {
+      const initialColor = this.icon.getColor();
+      Object.values(ColorsPropName).forEach((propName, key) => {
+        if (this.hasAttribute(propName) && _AnyIcon.__manager__ && this.icon) {
+          const colorData = _AnyIcon.__manager__.getColor(key);
+          this.icon.color = colorData.color;
+        }
+      });
+      if (initialColor != this.icon.getColor()) {
+        this.render();
+      }
+    }
+  }
+  setColor(color) {
+    this.setAttribute(ColorsPropName[color], "");
   }
   disconnectedCallback() {
     var _a, _b;
@@ -57,13 +145,11 @@ var _AnyIcon = class _AnyIcon extends HTMLElement {
   static get observedAttributes() {
     return [this.attributeName];
   }
-  createImage() {
+  defineIcon() {
     var _a;
     const iconName = this.getAttribute(_AnyIcon.attributeName);
     if (iconName) {
-      return (_a = _AnyIcon.__manager__) == null ? void 0 : _a.getIconElement(iconName);
-    } else {
-      return document.createElement("img");
+      this.icon = (_a = _AnyIcon.__manager__) == null ? void 0 : _a.getIcon(iconName);
     }
   }
   static defineManager(manager) {
@@ -77,106 +163,55 @@ var _AnyIcon = class _AnyIcon extends HTMLElement {
       });
     }
   }
-  attributeChangedCallback() {
-    var _a;
-    if (!((_a = this.image) == null ? void 0 : _a.getAttribute("src"))) {
-      const image = this.createImage();
-      if (image) {
-        this.image = image;
-      }
-      this.appendImage();
-    }
-  }
-  appendStyle() {
-    const style = this.defineStyle();
-    if (this.shadow) {
-      this.shadow.appendChild(style);
-    }
-  }
-  appendImage() {
-    if (this.image && this.shadow) {
-      const indentifiedImg = this.shadow.getElementById(this.getIconId());
-      if (indentifiedImg) {
-        indentifiedImg.remove();
-      }
-      this.randomId = this.genRandomId();
-      this.image.id = this.getIconId();
-      this.shadow.appendChild(this.image);
-    }
-  }
-  genRandomId() {
-    const randomId = Math.floor(Math.random() * 1e3);
-    const windowWithId = document.getElementById(this.getIconId(randomId));
-    if (windowWithId) {
-      return this.genRandomId();
-    }
-    return randomId;
-  }
-  getIconId(randomId) {
-    return _AnyIcon.imgIdPrefix + String(randomId ? randomId : this.randomId);
-  }
-  defineStyle() {
-    const style = document.createElement("style");
-    style.textContent = `
-      :host {
-        display: flex;
-        width: min-content;
-      }
-      :host img.any-icon-img{
-        user-select: none;
-        pointer-events: none;
-      }
-    `;
-    return style;
-  }
   setIcon(name) {
     this.setAttribute(_AnyIcon.attributeName, name);
   }
   setSize(size) {
     this.setAttribute(SizeNames[size], "");
   }
-  connectedCallback() {
-    if (this.image) {
-      this.defineLoadingByProp();
-      this.defineAltByProp();
-      this.defineSizeByProp();
-    }
-  }
-  defineImgLoading(loading) {
-    if (this.image) {
-      this.image.loading = loading;
-    }
-  }
   defineAltByProp() {
+    let changes = false;
     const alt = this.getAttribute("alt");
-    if (alt && this.image) {
-      this.image.alt = alt;
+    if (alt && this.icon) {
+      changes = true;
+      this.icon.alt = alt;
     }
+    return changes;
   }
   defineSizeByProp() {
+    var _a, _b, _c, _d;
+    const initialHeight = (_a = this.icon) == null ? void 0 : _a.height;
+    const initialWidth = (_b = this.icon) == null ? void 0 : _b.width;
     Object.values(SizeNames).forEach((size, key) => {
-      if (this.hasAttribute(size) && _AnyIcon.__manager__ && this.image) {
+      if (this.hasAttribute(size) && _AnyIcon.__manager__) {
         const sizeValue = _AnyIcon.__manager__.getSizeValue(key);
-        if (typeof sizeValue === "number") {
-          this.image.height = sizeValue;
-          this.image.width = sizeValue;
+        if (typeof sizeValue === "number" && this.icon) {
+          this.icon.height = sizeValue;
+          this.icon.width = sizeValue;
         }
       }
     });
+    return initialHeight != ((_c = this.icon) == null ? void 0 : _c.height) || initialWidth != ((_d = this.icon) == null ? void 0 : _d.width);
   }
   defineLoadingByProp() {
-    const loadingLazy = this.hasAttribute("lazy" /* LAZY */);
-    const loadingEager = this.hasAttribute("eager" /* EAGER */);
-    if (loadingLazy) {
-      this.defineImgLoading("lazy" /* LAZY */);
-    } else if (loadingEager) {
-      this.defineImgLoading("eager" /* EAGER */);
+    var _a;
+    let needRender = false;
+    if ((_a = this.icon) == null ? void 0 : _a.getLoadingType()) {
+      const loadingLazy = this.hasAttribute("lazy" /* LAZY */);
+      const loadingEager = this.hasAttribute("eager" /* EAGER */);
+      if (loadingLazy) {
+        needRender = true;
+        this.icon.loadingType("lazy" /* LAZY */);
+      } else if (loadingEager) {
+        needRender = true;
+        this.icon.loadingType("eager" /* EAGER */);
+      }
     }
+    return needRender;
   }
 };
 _AnyIcon.__manager_define_events__ = [];
 _AnyIcon.attributeName = "icon-name";
-_AnyIcon.imgIdPrefix = "any-icon-img-element-";
 _AnyIcon.elementName = "any-icon";
 var AnyIcon = _AnyIcon;
 
@@ -185,6 +220,7 @@ var IconModel = class {
   constructor(name, path) {
     this.name = name;
     this.path = path;
+    this.color = "black";
   }
   getPath() {
     return this.path;
@@ -199,10 +235,14 @@ var IconModel = class {
   getName() {
     return this.name;
   }
+  getPatch() {
+    return this.path;
+  }
+  getColor() {
+    return this.color;
+  }
   createElement() {
-    console.log("IconModel.create");
     const img = document.createElement("img");
-    img.src = this.path;
     img.loading = "lazy";
     img.height = 12;
     img.width = 12;
@@ -212,12 +252,22 @@ var IconModel = class {
     };
     return img;
   }
+  defineRandomId() {
+    const randomIdNumber = Math.floor(Math.random() * 1e3);
+    const elementIdName = `any-icon-img-element-${randomIdNumber}`;
+    const windowWithId = document.getElementById(elementIdName);
+    if (windowWithId) {
+      return this.defineRandomId();
+    }
+    this.randomId = elementIdName;
+  }
 };
 
 // src/models/AnyIconsManager.ts
 var AnyIconsManager = class _AnyIconsManager {
   constructor() {
-    this.sizes = [];
+    this._sizes = [];
+    this._colors = [];
     this.names = /* @__PURE__ */ new Map();
   }
   static build() {
@@ -226,14 +276,14 @@ var AnyIconsManager = class _AnyIconsManager {
   addIcon(icon) {
     this.names.set(icon.getName(), icon);
   }
-  register(records) {
+  icons(records) {
     records.forEach(({ name, src }) => {
       this.addIcon(new IconModel(name, src));
     });
   }
   getSizeValue(sizeName) {
     var _a;
-    return ((_a = this.sizes.find((size) => size.size === sizeName)) == null ? void 0 : _a.value) || 16;
+    return ((_a = this._sizes.find((size) => size.size === sizeName)) == null ? void 0 : _a.value) || 16;
   }
   getIconElement(name) {
     const icon = this.names.get(name);
@@ -242,11 +292,20 @@ var AnyIconsManager = class _AnyIconsManager {
       return icont;
     }
   }
+  getIcon(iconName) {
+    return this.names.get(iconName);
+  }
   update() {
     AnyIcon.defineManager(this);
   }
-  registerSizes(sizes) {
-    this.sizes.push(...sizes);
+  colors(colorsList) {
+    this._colors.push(...colorsList);
+  }
+  getColor(color) {
+    return this._colors.find((c) => c.name === color) || { color: "black", name: 6 /* BLACK */ };
+  }
+  sizes(sizes) {
+    this._sizes.push(...sizes);
   }
   createElement() {
     return document.createElement(AnyIcon.elementName);
@@ -254,22 +313,6 @@ var AnyIconsManager = class _AnyIconsManager {
 };
 
 // src/index.ts
-async function loadCssFile(url) {
-  try {
-    const response = await fetch(url);
-    if (!response.ok) {
-      throw new Error("Falha ao carregar o arquivo CSS");
-    }
-    const cssText = await response.text();
-    console.log(cssText);
-    return cssText;
-  } catch (error) {
-    console.error(error);
-  }
-}
-loadCssFile("./style.css").then((cssContent) => {
-  console.log(cssContent);
-});
 var createManager = () => {
   const instance = AnyIconsManager.build();
   AnyIcon.defineManager(instance);
@@ -279,6 +322,7 @@ customElements.define(AnyIcon.elementName, AnyIcon);
 export {
   AnyIcon,
   AnyIconsManager,
+  IconColors,
   IconModel,
   IconSizes,
   createManager

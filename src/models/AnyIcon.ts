@@ -1,35 +1,67 @@
-import { AnyIconsManager } from '..';
-import { IconSizes, ImgLoadingType, SizeNames } from '../any-icons.type';
+import { AnyIconsManager, IconModel } from '..';
+import { ColorsPropName, IconColors, IconSizes, IHTMLElement, ImgLoadingType, SizeNames } from '../any-icons.type';
+import { AnyIconRenderer } from './AnyIconRenderer';
 
-export default class AnyIcon<Names> extends HTMLElement {
-  private image?: HTMLImageElement;
-  private shadow?: ShadowRoot;
+export default class AnyIcon<Names> extends HTMLElement implements IHTMLElement {
+  
+  private icon?: IconModel<Names>;
   private static __manager__?: AnyIconsManager<Record<string, unknown>>;
   private static __manager_define_events__: (() => void)[] = [];
   private static readonly attributeName = 'icon-name';
-  private static readonly imgIdPrefix = 'any-icon-img-element-';
   public static readonly elementName = 'any-icon';
-  private randomId?: number
-  private managerDefineEventCallback = (): void => {
-    if(!this.image || (this.image && !this.image.getAttribute('src'))){
-      const image = this.createImage();
-      if(image){
-        this.image = image;
-      }
-      this.appendImage();
-      this.connectedCallback()
-    }
-  }
+  private anyIconRenderer?: AnyIconRenderer;
+  
   public constructor() {
     super();
-    this.shadow = this.attachShadow({ mode: "open" });
-    const image = this.createImage();
-    if(image){
-      this.image = image;
-    }
-    this.appendImage();
-    this.appendStyle();
+    this.anyIconRenderer = new AnyIconRenderer(this.attachShadow({ mode: "open" }));
+    this.render();
     AnyIcon.__manager_define_events__?.push(this.managerDefineEventCallback);
+  }
+
+  private render(): void {
+    this.defineIcon()
+    if(this.icon){
+      this.anyIconRenderer?.render(this);
+      this.defineLoadingByProp();
+      this.defineAltByProp();
+      this.defineSizeByProp();
+      this.defineColor();
+    }
+    
+  }
+
+  public getIcon(): IconModel<Names> | undefined{
+    return this.icon
+  }
+  
+  private managerDefineEventCallback = (): void => {
+    this.render();
+  }
+
+  public connectedCallback(): void {
+    this.defineLoadingByProp();
+    this.defineAltByProp();
+    this.defineSizeByProp();
+    this.defineColor();
+  }
+
+  private defineColor(): void{
+    if(this.icon){
+      const initialColor = this.icon.getColor();
+      Object.values(ColorsPropName).forEach((propName: string, key: IconColors) => {
+        if(this.hasAttribute(propName) && AnyIcon.__manager__ && this.icon){
+          const colorData = AnyIcon.__manager__.getColor(key)
+          this.icon.color = colorData.color;
+        }
+      })
+      if(initialColor != this.icon.getColor()){
+        this.render();
+      }
+    }
+  }
+
+  public setColor(color: IconColors): void{
+    this.setAttribute(ColorsPropName[color], '');
   }
 
   public disconnectedCallback(): void{
@@ -43,12 +75,10 @@ export default class AnyIcon<Names> extends HTMLElement {
     return [this.attributeName];
   }
 
-  private createImage(): HTMLImageElement | void{
-    const iconName: string | null = this.getAttribute(AnyIcon.attributeName)
+  private defineIcon(): void{
+    const iconName: Names | null = this.getAttribute(AnyIcon.attributeName) as Names | null;
     if(iconName){
-      return AnyIcon.__manager__?.getIconElement(iconName);
-    }else{
-      return document.createElement("img");
+      this.icon = AnyIcon.__manager__?.getIcon(iconName) as IconModel<Names>;
     }
   }
 
@@ -63,63 +93,6 @@ export default class AnyIcon<Names> extends HTMLElement {
     }
   }
 
-  public attributeChangedCallback(): void{
-    if(!this.image?.getAttribute('src')){
-      const image = this.createImage();
-      if(image){
-        this.image = image;
-      }
-      this.appendImage()
-    }
-  }
-
-  private appendStyle(): void{
-    const style = this.defineStyle();
-    if(this.shadow){
-      this.shadow.appendChild(style);
-    }
-  }
-
-  private appendImage(): void{
-    if(this.image && this.shadow){
-      const indentifiedImg = this.shadow.getElementById(this.getIconId());
-      if(indentifiedImg){
-        indentifiedImg.remove();
-      }
-      this.randomId = this.genRandomId();
-      this.image.id = this.getIconId();
-      this.shadow.appendChild(this.image);
-    }
-  }
-
-  private genRandomId(): number{
-    const randomId = Math.floor(Math.random() * 1000);
-    const windowWithId = document.getElementById(this.getIconId(randomId));
-    if(windowWithId){
-      return this.genRandomId();
-    }
-    return randomId;
-  }
-
-  private getIconId(randomId?: number): string{
-    return AnyIcon.imgIdPrefix + String(randomId ? randomId : this.randomId)
-  }
-
-  private defineStyle(): HTMLStyleElement{
-    const style = document.createElement("style");
-    style.textContent = `
-      :host {
-        display: flex;
-        width: min-content;
-      }
-      :host img.any-icon-img{
-        user-select: none;
-        pointer-events: none;
-      }
-    `;
-    return style
-  }
-
   public setIcon(name: Names): void{
     this.setAttribute(AnyIcon.attributeName, name as string)
   }
@@ -127,45 +100,42 @@ export default class AnyIcon<Names> extends HTMLElement {
   public setSize(size: IconSizes): void{
     this.setAttribute(SizeNames[size], '');
   }
-
-  public connectedCallback(): void {
-    if(this.image){
-      this.defineLoadingByProp();
-      this.defineAltByProp();
-      this.defineSizeByProp();
-    }
-  }
-
-
-  private defineImgLoading(loading: ImgLoadingType): void{
-    if(this.image){
-      this.image.loading = loading;
-    }    
-  }
-  private defineAltByProp(): void{
+  private defineAltByProp(): boolean{
+    let changes = false
     const alt = this.getAttribute("alt");
-    if(alt && this.image){
-      this.image.alt = alt;
+    if(alt && this.icon){
+      changes = true
+      this.icon.alt = alt;
     }
+    return changes
   }
-  private defineSizeByProp(): void{
+  private defineSizeByProp(): boolean{
+    const initialHeight = this.icon?.height;
+    const initialWidth = this.icon?.width;
     Object.values(SizeNames).forEach((size: string, key: IconSizes) => {
-      if(this.hasAttribute(size) && AnyIcon.__manager__ && this.image){
+      if(this.hasAttribute(size) && AnyIcon.__manager__){
         const sizeValue = AnyIcon.__manager__.getSizeValue(key);
-        if(typeof sizeValue === 'number'){
-          this.image.height = sizeValue;
-          this.image.width = sizeValue;
+        if(typeof sizeValue === 'number' && this.icon){
+          this.icon.height = sizeValue;
+          this.icon.width = sizeValue;
         }
       }
     });
+    return initialHeight != this.icon?.height || initialWidth != this.icon?.width
   }
-  private defineLoadingByProp(): void{
-    const loadingLazy: boolean = this.hasAttribute(ImgLoadingType.LAZY);
-    const loadingEager: boolean = this.hasAttribute(ImgLoadingType.EAGER);
-    if(loadingLazy){
-      this.defineImgLoading(ImgLoadingType.LAZY);
-    }else if(loadingEager){
-      this.defineImgLoading(ImgLoadingType.EAGER);
+  private defineLoadingByProp(): boolean{
+    let needRender = false
+    if(this.icon?.getLoadingType()){
+      const loadingLazy: boolean = this.hasAttribute(ImgLoadingType.LAZY);
+      const loadingEager: boolean = this.hasAttribute(ImgLoadingType.EAGER);
+      if(loadingLazy){
+        needRender = true
+        this.icon.loadingType(ImgLoadingType.LAZY);
+      }else if(loadingEager){
+        needRender = true
+        this.icon.loadingType(ImgLoadingType.EAGER);
+      }
     }
+    return needRender;
   }
 }

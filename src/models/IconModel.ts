@@ -1,8 +1,13 @@
 import { ImgLoadingType } from '../any-icons.type';
-
-export default class IconModel<RN>{
+type elementImageId = `any-icon-img-element-${number}`;
+export default class IconModel<IconNames>{
   private loadingTypeProp?: ImgLoadingType;
-  public constructor(private name: RN[keyof RN], private path: string){}
+  public color: string = 'black';
+  public randomId?: elementImageId;
+  public width?: number;
+  public alt?: string
+  public height?: number;
+  public constructor(private name: IconNames, private path: string){}
   public getPath(): string{
     return this.path;
   }
@@ -13,13 +18,17 @@ export default class IconModel<RN>{
   public getLoadingType(): ImgLoadingType | undefined{
     return this.loadingTypeProp;
   }
-  public getName(): RN[keyof RN]{
+  public getName(): IconNames{
     return this.name;
   }
+  public getPatch(): string{
+    return this.path;
+  }
+  public getColor(): string{
+    return this.color;
+  }
   public createElement(): HTMLImageElement{
-    console.log('IconModel.create')
     const img = document.createElement('img');
-    img.src = this.path;
     img.loading = 'lazy';
     img.height = 12;
     img.width = 12;
@@ -28,5 +37,14 @@ export default class IconModel<RN>{
       console.error(`Falha ao carregar o ícone "${this.name}". Verifique o caminho: ${this.path}`);
     }
     return img;
+  }
+  public defineRandomId(): void{
+    const randomIdNumber = Math.floor(Math.random() * 1000);
+    const elementIdName: elementImageId = `any-icon-img-element-${randomIdNumber}`
+    const windowWithId = document.getElementById(elementIdName);
+    if(windowWithId){
+      return this.defineRandomId();
+    }
+    this.randomId = elementIdName;
   }
 }

@@ -3,7 +3,7 @@ enum ImgLoadingType{
   EAGER = 'eager'
 }
 interface IconRecord<Names>{
-  name: Names[keyof Names],
+  name: Names,
   src: string
 }
 enum IconSizes{
@@ -17,8 +17,30 @@ enum IconSizes{
   EXTRA_HUGE,
   GIANT,
 }
+enum IconColors{
+  PRIMARY,
+  SECUNDARY,
+  TERTIARY,
+  DANGER,
+  WARNING,
+  SUCCESS,
+  BLACK
+}
 interface SizeData{
   size: IconSizes, value: number | string
+}
+interface ColorsData{
+  name: IconColors,
+  color: string
+}
+const ColorsPropName: Record<IconColors, string> = {
+  [IconColors.PRIMARY]: "primary",
+  [IconColors.SECUNDARY]: "secundary",
+  [IconColors.TERTIARY]: "tertiary",
+  [IconColors.DANGER]: "danger",
+  [IconColors.WARNING]: "warning",
+  [IconColors.SUCCESS]: "success",
+  [IconColors.BLACK]: "black",
 }
 const SizeNames: Record<IconSizes, string> = {
   [IconSizes.NANO]: "nano",
@@ -31,4 +53,7 @@ const SizeNames: Record<IconSizes, string> = {
   [IconSizes.EXTRA_HUGE]: "extra-huge",
   [IconSizes.GIANT]: "giant",
 };
-export { ImgLoadingType, IconRecord, IconSizes, SizeNames, SizeData };
+interface IHTMLElement{
+  disconnectedCallback(): void
+}
+export { IconColors, ImgLoadingType, IconRecord, IconSizes, SizeNames, SizeData, ColorsData, ColorsPropName, IHTMLElement };

@@ -4,9 +4,10 @@
   "version": "1.0.48",
   "description": "Agnostic button",
   "main": "./dist/index.js",
+  "typings": "./dist/index",
   "module": "./dist/index.mjs",
   "scripts": {
-    "serve": "tsup --watch"
+    "build": "tsup --watch"
   },
   "repository": {
     "type": "git",
@@ -33,6 +34,7 @@
     ".": "./dist/index.js"
   },
   "dependencies": {
+    "lit-html": "^3.2.1",
     "tslib": "^2.8.1"
   }
 }
